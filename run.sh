@@ -1,0 +1,1 @@
+java -jar target/RankLib-2.13.jar -train /Users/weiyuxuan/Documents/data/MSLR-WEB10K/Fold1/train.txt -test /Users/weiyuxuan/Documents/data/MSLR-WEB10K/Fold1/test.txt -validate /Users/weiyuxuan/Documents/data/MSLR-WEB10K/Fold1/vali.txt -ranker 6 -metric2t NDCG@10 -save outputs/lambda_std.txt
