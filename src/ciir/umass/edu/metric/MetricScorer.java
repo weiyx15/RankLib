@@ -64,4 +64,13 @@ public abstract class MetricScorer {
 	public abstract MetricScorer copy();
 	public abstract String name();
 	public abstract double[][] swapChange(RankList rl);
+	/**
+	 * @author weiyuxuan
+	 * Overrided by {@code NDCGScorer}
+	 * @param rl
+	 * @return
+	 */
+	public double[][] reviseSwapChange(RankList rl) {
+		return swapChange(rl);
+	};
 }

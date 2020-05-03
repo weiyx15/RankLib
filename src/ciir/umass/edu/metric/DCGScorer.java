@@ -91,7 +91,27 @@ public class DCGScorer extends MetricScorer {
 			dcg += gain(rel[i]) * discount(i);
 		return dcg;
 	}
-	
+	/**
+	 * @author weiyuxuan
+	 * @param index
+	 * @return
+	 */
+	protected double mulDiscount(int index)
+	{
+		if(index < discount.length)
+			return discount[index];
+		
+		//we need to expand our cache
+		int cacheSize = discount.length + 1000;
+		while(cacheSize <= index)
+			cacheSize += 1000;
+		double[] tmp = new double[cacheSize];
+		System.arraycopy(discount, 0, tmp, 0, discount.length);
+		for(int i=discount.length;i<tmp.length;i++)
+			tmp[i] = SimpleMath.logBase2(i+2);
+		discount = tmp;
+		return discount[index];
+	}
 	//lazy caching
 	protected double discount(int index)
 	{

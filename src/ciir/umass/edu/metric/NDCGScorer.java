@@ -27,16 +27,22 @@ import java.util.List;
 public class NDCGScorer extends DCGScorer {
 	
 	protected HashMap<String, Double>  idealGains = null;
+	/**
+	 * @author weiyuxuan
+	 */
+	protected HashMap<String, Double>  idealMulGains = null;
 	
 	public NDCGScorer()
 	{
 		super();
 		idealGains = new HashMap<>();
+		idealMulGains = new HashMap<>();
 	}
 	public NDCGScorer(int k)
 	{
 		super(k);
 		idealGains = new HashMap<>();
+		idealMulGains = new HashMap<>();
 	}
 	public MetricScorer copy()
 	{
@@ -66,8 +72,9 @@ public class NDCGScorer extends DCGScorer {
 					int[] r = new int[rel.size()];
 					for(int i=0;i<rel.size();i++)
 						r[i] = rel.get(i);
-					double ideal = getIdealDCG(r, size);
+					double ideal = getIdealDCG(r, size), mulIdeal = getMulIdealDCG(r, size);
 					idealGains.put(lastQID, ideal);
+					idealMulGains.put(lastQID, mulIdeal);
 					rel.clear();
 					nQueries++;
 				}
@@ -80,8 +87,9 @@ public class NDCGScorer extends DCGScorer {
 				int[] r = new int[rel.size()];
 				for(int i=0;i<rel.size();i++)
 					r[i] = rel.get(i);
-				double ideal = getIdealDCG(r, size);
+				double ideal = getIdealDCG(r, size), mulIdeal = getMulIdealDCG(r, size);
 				idealGains.put(lastQID, ideal);
+				idealMulGains.put(lastQID, mulIdeal);
 				rel.clear();
 				nQueries++;
 			}
@@ -121,6 +129,41 @@ public class NDCGScorer extends DCGScorer {
 		
 		return getDCG(rel, size)/ideal;
 	}
+	/**
+	 * @author weiyuxuan
+	 * Revised version of metric swap change calculation
+	 * @param rl
+	 * @return
+	 */
+	public double[][] reviseSwapChange(RankList rl)
+	{
+		int size = (rl.size() > k) ? k : rl.size();
+		//compute the ideal ndcg
+		int[] rel = getRelevanceLabels(rl);
+		double ideal = 0;
+		Double d = idealMulGains.get(rl.getID());
+		if(d != null)
+			ideal = d;
+		else
+		{
+			ideal = getMulIdealDCG(rel, size);
+			//idealGains.put(rl.getID(), ideal);//DO *NOT* do caching here. It's not thread-safe.
+		}
+		
+		double[][] changes = new double[rl.size()][];
+		for(int i=0;i<rl.size();i++)
+		{
+			changes[i] = new double[rl.size()];
+			Arrays.fill(changes[i], 0);
+		}
+		
+		for(int i=0;i<size;i++)
+			for(int j=i+1;j<rl.size();j++)
+				if(ideal > 0)
+					changes[j][i] = changes[i][j] = (mulDiscount(i) - mulDiscount(j)) * (gain(rel[i]) - gain(rel[j])) / ideal;
+
+		return changes;
+	}
 	public double[][] swapChange(RankList rl)
 	{
 		int size = (rl.size() > k) ? k : rl.size();
@@ -154,7 +197,21 @@ public class NDCGScorer extends DCGScorer {
 	{
 		return "NDCG@"+k;
 	}
-	
+
+	/**
+	 * @author weiyuxuan
+	 * @param rel
+	 * @param topK
+	 * @return
+	 */
+	private double getMulIdealDCG(int[] rel, int topK)
+	{
+		int[] idx = Sorter.sort(rel, false);
+		double dcg = 0;
+		for(int i=0;i<topK;i++)
+			dcg += gain(rel[idx[i]]) * mulDiscount(i);
+		return dcg;
+	}
 	private double getIdealDCG(int[] rel, int topK)
 	{
 		int[] idx = Sorter.sort(rel, false);
