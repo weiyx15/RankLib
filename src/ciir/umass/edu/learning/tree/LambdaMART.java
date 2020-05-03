@@ -398,14 +398,6 @@ public class LambdaMART extends Ranker {
 			int[] idx = MergeSorter.sort(modelScores, current, current+orig.size()-1, false);
 			RankList rl = new RankList(orig, idx, current);
 			double[][] changes = scorer.reviseSwapChange(rl);
-			PRINTLN("*********************************");
-			for (double[] row: changes) {
-				for (double chg: row) {
-					PRINT(new int[]{9}, new String[]{Double.valueOf(chg).toString()});
-				}
-				PRINTLN("");
-			}
-			PRINTLN("*********************************");
 			//NOTE: j, k are indices in the sorted (by modelScore) list, not the original
 			// ==> need to map back with idx[j] and idx[k] 
 			for(int j=0;j<rl.size();j++)

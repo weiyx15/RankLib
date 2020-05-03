@@ -15,6 +15,10 @@ import ciir.umass.edu.utilities.SimpleMath;
 public class DCGScorer extends MetricScorer {
 	
 	protected static double[] discount = null;//cache
+	/**
+	 * @author weiyuxuan
+	 */
+	protected static double[] mulDiscount = null;//cache
 	protected static double[] gain = null;//cache
 	
 	public DCGScorer()
@@ -30,6 +34,13 @@ public class DCGScorer extends MetricScorer {
 			for(int i=0;i<6;i++)
 				gain[i] = (1<<i) - 1;//2^i-1
 		}
+		// weiyuxuan
+		if(mulDiscount == null)
+		{
+			mulDiscount= new double[5000];
+			for(int i=0;i<mulDiscount.length;i++)
+				mulDiscount[i] = SimpleMath.logBase2(i+2);
+		}
 	}
 	public DCGScorer(int k)
 	{
@@ -43,6 +54,13 @@ public class DCGScorer extends MetricScorer {
 			gain = new double[6];
 			for(int i=0;i<6;i++)
 				gain[i] = (1<<i) - 1;//2^i - 1
+		}
+		// weiyuxuan
+		if(mulDiscount == null)
+		{
+			mulDiscount= new double[5000];
+			for(int i=0;i<mulDiscount.length;i++)
+				mulDiscount[i] = SimpleMath.logBase2(i+2);
 		}
 	}
 	public MetricScorer copy()
@@ -98,19 +116,19 @@ public class DCGScorer extends MetricScorer {
 	 */
 	protected double mulDiscount(int index)
 	{
-		if(index < discount.length)
-			return discount[index];
+		if(index < mulDiscount.length)
+			return mulDiscount[index];
 		
 		//we need to expand our cache
-		int cacheSize = discount.length + 1000;
+		int cacheSize = mulDiscount.length + 1000;
 		while(cacheSize <= index)
 			cacheSize += 1000;
 		double[] tmp = new double[cacheSize];
-		System.arraycopy(discount, 0, tmp, 0, discount.length);
-		for(int i=discount.length;i<tmp.length;i++)
+		System.arraycopy(mulDiscount, 0, tmp, 0, mulDiscount.length);
+		for(int i=mulDiscount.length;i<tmp.length;i++)
 			tmp[i] = SimpleMath.logBase2(i+2);
-		discount = tmp;
-		return discount[index];
+			mulDiscount = tmp;
+		return mulDiscount[index];
 	}
 	//lazy caching
 	protected double discount(int index)
